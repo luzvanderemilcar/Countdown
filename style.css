@@ -54,12 +54,12 @@ button {
     background-color: var(--light-color, white);
     color: var(--dark-color, black);
     padding : 5px;
-    min-width: 250px;
+    min-width: 200px;
     max-width: 400px;
     display: grid;
     grid-gap : 20px;
-    grid-template-areas : "display display ."
-      ". controls controls";
+    grid-template-areas: "display display"
+      "controls controls";
     justify-items: center;
     align-items : end;
     
@@ -178,3 +178,4 @@ button {
       align-self  : center;
       }
   }
+  

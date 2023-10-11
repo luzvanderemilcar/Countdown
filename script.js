@@ -16,8 +16,8 @@ const TimeOverBeep = document.getElementById("beep");
 const LightenDiv = document.getElementById("signal");
 
 //Timer global values
-let sessionLength = 25;
-let breakLength = 5;
+let sessionLength;
+let breakLength;
 let activeInterval;
 let soundTimeOut;
 let lightenInterval;
@@ -27,10 +27,10 @@ const SESSION = "Session";
 const BREAK = "Break";
 
 // if the current timer has been already stopped
-let initialized = false;
+let initialized = false; //already started
 let paused = false;
-let breakOn = false;
-let newSession = false;
+let breakOn = false; // the break is running 
+let timeOver = false; // the timer has ended
 
 // Default timer
 (() => {
@@ -72,7 +72,12 @@ SessionDecBtn.addEventListener("click", () => {
 });
 
 StartStopBtn.addEventListener("click", () => {
-  if (initialized && paused) {
+if (timeOver) {
+        setTimer(sessionLength, breakLength);
+        start();
+        timeOver = false;
+    }
+ else if (initialized && paused) {
     resume();
   } else if (initialized && !paused) {
     pause();
@@ -100,12 +105,8 @@ function setTimer(sessionSet, breakSet) {
 }
 
 function start() {
-  if (paused) {
     paused = false;
-  }
-  if (!initialized) {
     initialized = true;
-  }
 
   if (TimerLabel.innerHTML == BREAK) {
     TimerLabel.innerHTML = SESSION;
@@ -117,10 +118,7 @@ function start() {
       sessionCount--;
       TimeLeft.innerHTML = fromSecond(sessionCount);
     } else if (sessionCount == 0) {
-      if (newSession) {
-        setTimer(sessionLength, breakLength);
-        newSession = false;
-      } else if (breakCount > 0) {
+      if (breakCount > 0) {
         if (!breakOn) {
           playBeep();
           TimerLabel.innerHTML = BREAK;
@@ -132,14 +130,19 @@ function start() {
         playBeep();
         TimeLeft.innerHTML = fromSecond(breakCount);
         breakOn = false;
-        newSession = true;
+        if (activeInterval) {
+            clearInterval(activeInterval);
+            activeInterval = null;
+        }
+        timeOver = true;
+          StartStopBtn.innerHTML =
+              '<i class="fa-solid fa-play fa-lg"></i>️<span class="sr-only">Resume</span>';
       }
     }
   }, 1000);
 }
 
 function resume() {
-  if (paused) {
     paused = false;
     StartStopBtn.innerHTML =
       '<i class="fa-solid fa-pause fa-lg"></i><span class="sr-only">Pause</span>';
@@ -148,10 +151,7 @@ function resume() {
         sessionCount--;
         TimeLeft.innerHTML = fromSecond(sessionCount);
       } else if (sessionCount == 0) {
-        if (newSession) {
-          setTimer(sessionLength, breakLength);
-          newSession = false;
-        } else if (breakCount > 0) {
+        if (breakCount > 0) {
           if (!breakOn) {
             playBeep();
             breakOn = true;
@@ -163,12 +163,18 @@ function resume() {
           playBeep();
           TimeLeft.innerHTML = fromSecond(breakCount);
           breakOn = false;
-          newSession = true;
+          if (activeInterval) {
+              clearInterval(activeInterval);
+              activeInterval = null;
+          }
+          timeOver = true;
+          StartStopBtn.innerHTML =
+                '<i class="fa-solid fa-play fa-lg"></i>️<span class="sr-only">Resume</span>';
+          
         }
       }
     }, 1000);
   }
-}
 
 function pause() {
   if (activeInterval) {
@@ -182,12 +188,10 @@ function pause() {
 }
 
 function reset() {
-  if (initialized) {
+    timeOver = false;
     initialized = false;
-  }
-  if (paused) {
     paused = false;
-  }
+ 
   TimeOverBeep.pause();
   TimeOverBeep.currentTime = 0;
   initState();
@@ -200,9 +204,8 @@ function initState() {
   if (TimerLabel.innerHTML == BREAK) {
     TimerLabel.innerHTML = SESSION;
   }
-  if (breakOn) {
     breakOn = false;
-  }
+    
   if (activeInterval) {
     clearInterval(activeInterval);
     activeInterval = null;
@@ -245,7 +248,7 @@ function stopBeep() {
 function signal() {
   lightenInterval = setInterval(() => {
     LightenDiv.classList.toggle("lighten");
-  }, 250);
+  }, 500);
 }
 
 function muniteSet(min) {
